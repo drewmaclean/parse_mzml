@@ -63,17 +63,18 @@ def parseFile(parse_file)
   rtArray.map! { |x| x.to_f }
 
   # append to a arraylist of 3 tuple
-  resultArray = [mzArray, rtArray, intensityArray]
+  #resultArray = [mzArray, rtArray, intensityArray]
+  resultArray = mzArray.zip(rtArray, intensityArray)
 
   return resultArray
 
 end
 
 def sort(array, sort_type)
-  puts array[0][100]
+  puts array[100][0]
   if sort_type == '-mz'
     puts 'sort mz'
-    array.sort_by! { |e| [e[2]] }
+    array.sort_by! { |e| [e[0]] }
 
     #array[0].sort!
   end
@@ -81,7 +82,7 @@ def sort(array, sort_type)
     puts 'sort rt'
     array.sort_by! { |e| [e[1]] }
   end
-  puts array[0][100]
+  puts array[100][0]
   return array
 end
 
@@ -91,10 +92,9 @@ def main(in_file, sort_flag, sort_type)
   array = parseFile(in_file)
 
   array = sort(array, sort_type) if sort_flag
-
-  # write each array to csv file
-  array[0].length.times do |i|
-    writefile.print "#{array[0][i]},#{array[1][i]},#{array[2][i]}\n"
+  # write array to csv file
+  array.each do |e|
+    writefile.print "#{e[0]},#{e[1]},#{e[2]}\n"
   end
 end
 
