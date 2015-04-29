@@ -1,4 +1,5 @@
 require 'base64'
+require 'English'
 
 def parseFile(parse_file)
   # XML from file
@@ -32,6 +33,9 @@ def parseFile(parse_file)
 
     if isCorrectMS && line['scan start time']
       /value="(?<val1>\d+).(?<val2>\d+)"/ =~ line
+      if val1.to_i < 1000
+        puts "#{$INPUT_LINE_NUMBER}"
+      end
       tempLength.times { rtArray << val1 + "." + val2 } # repeat for each mz / intensity value in the array
     end
 
@@ -53,17 +57,16 @@ def parseFile(parse_file)
   mzBinaryArray.each { |val| mzArray << Base64.decode64(val).unpack('E*') } # double precision - little endian
   mzArray.flatten!
   mzArray.map! { |x| x.round(4) }
-  mzArray.map! { |x| x.to_f }
+  #mzArray.map! { |x| x.to_f }
 
   intensityBinaryArray.each { |val| intensityArray << Base64.decode64(val).unpack('e*') } # single precision - little endian
   intensityArray.flatten!
   intensityArray.map! { |x| x.round(4) }
-  intensityArray.map! { |x| x.to_f }
+  #intensityArray.map! { |x| x.to_f }
 
   rtArray.map! { |x| x.to_f }
 
   # append to a arraylist of 3 tuple
-  #resultArray = [mzArray, rtArray, intensityArray]
   resultArray = mzArray.zip(rtArray, intensityArray)
 
   return resultArray
@@ -73,13 +76,13 @@ end
 def sort(array, sort_type)
   puts array[100][0]
   if sort_type == '-mz'
-    puts 'sort mz'
+    puts 'sorting by mz'
     array.sort_by! { |e| [e[0]] }
 
     #array[0].sort!
   end
   if sort_type == '-rt'
-    puts 'sort rt'
+    puts 'sorting by rt'
     array.sort_by! { |e| [e[1]] }
   end
   puts array[100][0]
@@ -90,7 +93,6 @@ end
 def main(in_file, sort_flag, sort_type)
   writefile = File.open('results.csv', 'w')
   array = parseFile(in_file)
-
   array = sort(array, sort_type) if sort_flag
   # write array to csv file
   array.each do |e|
@@ -99,5 +101,5 @@ def main(in_file, sort_flag, sort_type)
 end
 
 
-main('mouse_uncompressed.mzML', '-s', '-mz')
+main('mouse_uncompressed.mzML', '-s', '-rt')
 #main(ARGV[0], ARGV[1], ARGV[2])
