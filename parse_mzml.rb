@@ -14,6 +14,7 @@ def parseFile(parse_file)
 
 
   readfile = File.open(parse_file, 'r')
+  puts 'Reading file'
   isCorrectMS = false
 
   while line = readfile.gets
@@ -54,12 +55,10 @@ def parseFile(parse_file)
   mzBinaryArray.each { |val| mzArray << Base64.decode64(val).unpack('E*') } # double precision - little endian
   mzArray.flatten!
   mzArray.map! { |x| x.round(4) }
-  #mzArray.map! { |x| x.to_f }
 
   intensityBinaryArray.each { |val| intensityArray << Base64.decode64(val).unpack('e*') } # single precision - little endian
   intensityArray.flatten!
   intensityArray.map! { |x| x.round(4) }
-  #intensityArray.map! { |x| x.to_f }
 
   rtArray.map! { |x| x.to_f }
 
@@ -85,20 +84,28 @@ end
 
 
 def main(in_file, sort_flag, sort_type)
-  writefile = File.open('results.csv', 'w')
-  array = parseFile(in_file)
-  if sort_flag == '-s'
-    array = sort(array, sort_type)
-  else
-    puts 'Invalid parameter - running without parameters'
-  end
+  begin
+    if in_file[/\.mzml$/i] # check to make sure the the file ends in .mzml - case independent
+      array = parseFile(in_file)
+      if sort_flag == '-s'
+        array = sort(array, sort_type)
+      else
+        puts 'Invalid parameter - running without parameters'
+      end
 
-  # write array to csv file
-  array.each { |e|
-    writefile.print "#{e[0]},#{e[1]},#{e[2]}\n" }
+      # write array to csv file
+      writefile = File.open('results.csv', 'w')
+      puts 'Writing to results.csv'
+      array.each { |e| writefile.print "#{e[0]},#{e[1]},#{e[2]}\n" }
+      puts 'Success'
+    else
+      puts 'Filename must end in .mzML'
+    end
+  rescue
+    puts "Filename wasn't specified or wasn't found"
+  end
 end
 
 
-main('mouse_uncompressed.mzML', '-sort', '-mz')
-#main(ARGV[0], ARGV[1], ARGV[2])
-puts 'Success'
+#main('mouse_uncompressed.mzML', '-s', '-mz')
+main(ARGV[0], ARGV[1], ARGV[2])
